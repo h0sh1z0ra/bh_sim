@@ -3,7 +3,8 @@
 
 #include "vec3.h"
 
-#include <iostream>
+// #include <iostream>
+// Going to be using rtweekend.h common header, so this isn't needed anymore
 
 using color = vec3;
 
