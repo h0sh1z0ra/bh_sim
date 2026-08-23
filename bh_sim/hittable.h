@@ -29,9 +29,8 @@ class hittable {
         // if done so. But if not, the sphere would delete but not hittable
         // Like it remains after, which is a memory leak
 
-
         // Hits only count if t_min < t < t_max
-        virtual bool hit(const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const = 0;
+        virtual bool hit(const ray& r, interval ray_t, hit_record& rec) const = 0;
 };
 
 #endif

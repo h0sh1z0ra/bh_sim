@@ -1,0 +1,35 @@
+#ifndef INTERVAL_H
+#define INTERVAL_H
+
+class interval {
+    public:
+        double min, max;
+
+        interval() : min(+infinity), max(-infinity) {} // default interval is empty
+
+        // constructor                     member(parameter)
+        interval(double min, double max) : min(min), max(max) {}
+        // above is equal to
+        // def __init__(self, min, max):
+            // self.min = min
+            // self.max = max
+
+        double size() const {
+            return max - min;
+        }
+
+        bool contains(double x) const {
+            return min <= x && x <= max;
+        }
+
+        bool surrounds(double x) const {
+            return min < x && x < max;
+        }
+
+        static const interval empty, universe;
+};
+
+const interval interval::empty    = interval(+infinity, -infinity); // always will be empty; (+inf, -inf) is impossible
+const interval interval::universe = interval(-infinity, +infinity); // contains everything
+
+#endif
