@@ -14,6 +14,12 @@ class interval {
             // self.min = min
             // self.max = max
 
+        // Constructor to merge
+        interval(const interval& a, const interval& b) {
+        min = std::fmin(a.min, b.min);
+        max = std::fmax(a.max, b.max);
+        }
+
         double size() const {
             return max - min;
         }

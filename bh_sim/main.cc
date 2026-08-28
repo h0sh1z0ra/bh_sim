@@ -5,6 +5,7 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
+#include "bvh.h"
 
 #include <iostream>   // for std::cout (output)
 #include <io.h>
@@ -75,13 +76,16 @@ int main() {
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
-    cam.samples_per_pixel = 5;
+    cam.samples_per_pixel = 100;
     cam.max_depth         = 50;
 
     cam.vfov     = 20;
     cam.lookfrom = point3(13,2,3);
     cam.lookat   = point3(0,0,0);
     cam.vup      = vec3(0,1,0);
+
+    // Build BVH over all objects
+    world = hittable_list(make_shared<bvh_node>(world));
 
     cam.render(world);
 }

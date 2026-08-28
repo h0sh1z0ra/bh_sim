@@ -5,7 +5,11 @@
 
 class sphere : public hittable {
     public:
-        sphere(const point3& centre, double radius, shared_ptr<material> mat) : centre(centre), radius(std::fmax(0, radius)), mat(mat) {}
+        sphere(const point3& centre, double radius, shared_ptr<material> mat) : centre(centre), radius(std::fmax(0, radius)), mat(mat) {
+            auto rvec = vec3(this->radius, this->radius, this->radius);
+            bbox = aabb(centre - rvec, centre + rvec); // min corner, max corner
+        } 
+        aabb bounding_box() const override { return bbox; }  // needs to be here cuz the virtual for this bounding box is present in hittable
 
         bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
             vec3 oc = centre - r.origin();
@@ -42,6 +46,7 @@ class sphere : public hittable {
         point3 centre;
         double radius;
         shared_ptr<material> mat;
+        aabb bbox;
 };
 
 #endif

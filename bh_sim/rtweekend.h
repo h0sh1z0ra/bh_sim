@@ -25,7 +25,10 @@ inline double random_double() {
     // static std::uniform_real_distribution<double> distribution(0.0, 1.0);
     // static std::mt19937 generator;
     // return distribution(generator);
-    static thread_local std::mt19937 gen(std::random_device{}());
+
+    // Give each thread its own generator; more random but gives up reproducibility since it calls a random value for the seed
+    // static thread_local std::mt19937 gen(std::random_device{}());
+    static thread_local std::mt19937 gen(12345);
     static thread_local std::uniform_real_distribution<double> dist(0.0, 1.0);
     return dist(gen);
 }
@@ -33,6 +36,14 @@ inline double random_double() {
 inline double random_double(double min, double max) {
     // Return random real in [min, max)
     return min + (max-min)*random_double();
+}
+
+inline int random_int(int min, int max) {
+    // random integer in [min, max)
+    // static thread_local std::mt19937 gen(std::random_device{}());
+    static thread_local std::mt19937 gen(12345);
+    static thread_local std::uniform_int_distribution<int> dist(min, max);
+    return dist(gen);
 }
 
 // Common headers

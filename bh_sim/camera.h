@@ -30,8 +30,8 @@ class camera {
             // Redone render loop, spread over thread count
             // image.resize(image_width * image_height);
 
-            const int num_threads = 1;
-            // const int num_threads = std::thread::hardware_concurrency();
+            // const int num_threads = 1;
+            const int num_threads = std::thread::hardware_concurrency();
             int rows_per_thread = image_height / num_threads;
 
             thread_buffers.resize(num_threads);
@@ -186,8 +186,8 @@ class camera {
             auto endTime = std::chrono::high_resolution_clock::now();
             auto total = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 
-            std::clog << "Thread Finished Rows " << start << "-" << end <<
-                         "Finished at " << total << '\n';
+            std::clog << "Thread Finished Rows " << start << " - " << end <<
+                         "; finished at " << total << "ms\n";
         } 
         
         long long duration(std::chrono::high_resolution_clock::time_point a, 

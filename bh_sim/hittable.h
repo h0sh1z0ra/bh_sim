@@ -4,6 +4,8 @@
 // #include "ray.h"
 // Using rtweekend.h this isn't needed
 
+#include "aabb.h"
+
 class material;
 
 class hit_record {
@@ -20,7 +22,7 @@ class hit_record {
 
             front_face = dot(r.direction(), outward_normal) < 0;
             normal = front_face ? outward_normal : -outward_normal;
-        }
+        }  
 };
 
 class hittable {
@@ -34,6 +36,10 @@ class hittable {
 
         // Hits only count if t_min < t < t_max
         virtual bool hit(const ray& r, interval ray_t, hit_record& rec) const = 0;
+
+        // for aabb
+        virtual aabb bounding_box() const = 0;
+
 };
 
 #endif
