@@ -4,6 +4,10 @@
 #include "hittable.h"
 #include "material.h"
 
+#include <thread>
+#include <chrono>
+#include <fstream>
+
 class camera {
     public:
         // Image
@@ -19,26 +23,52 @@ class camera {
         vec3   vup      = vec3(0,1,0);      // Altitude
 
         void render(const hittable& world) {
+            auto start_time = std::chrono::high_resolution_clock::now();
+
             initialize();
 
-            // Render
-            std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+            // Redone render loop, spread over thread count
+            // image.resize(image_width * image_height);
 
-            for (int y = 0; y < image_height; y++) {
-                std::clog << "\nScanlines remaining: " << (image_height - y) << ' ' << std::flush;
-                for (int x = 0; x < image_width; x++) {
-                    // Anti-aliasing
-                    color pixel_color(0,0,0);
+            const int num_threads = 1;
+            // const int num_threads = std::thread::hardware_concurrency();
+            int rows_per_thread = image_height / num_threads;
 
-                    for (int sample = 0; sample < samples_per_pixel; sample++) {
-                        ray r = get_ray(x, y);
-                        pixel_color += ray_color(r, max_depth, world);
-                    }
-                    write_color(std::cout, pixel_samples_scale * pixel_color);
-                }
+            thread_buffers.resize(num_threads);
+
+            // Spawn threads
+            std::vector<std::thread> threads;
+            for (int t = 0; t < num_threads; t++) {
+                // Chunking per thread
+                int start = t * rows_per_thread;
+                int end   = (t == num_threads - 1) ? image_height : start + rows_per_thread;   // if last thread, take image_height since that's the end of the image.
+                
+                // Create new thread, run camera.render_rows, on this camera, from start to end, on the scene "world"
+                threads.push_back(
+                    std::thread(&camera::render_rows, this, t, start, end, std::ref(world))
+                );
             }
-                std::clog << "\nDone.               \n";
+            
+            // Wait for all threads to finish before constructing image
+            auto t1 = std::chrono::high_resolution_clock::now();
+            for (auto& th : threads) {
+                th.join();
+            }
+            
+            // Write in P6 binary format (way faster than P3)
+            auto t2 = std::chrono::high_resolution_clock::now();
+            std::ofstream out("image.ppm", std::ios::binary);   // write out in binary format
+            out << "P6\n" << image_width << ' ' << image_height << "\n255\n";
+            for (const auto& buf : thread_buffers)
+                out.write(buf.data(), buf.size());  
+
+            auto end_time = std::chrono::high_resolution_clock::now();
+
+            std::clog << "\nRender Time: " << duration(start_time, end_time) << "ms; " << "Join time: " << 
+                                              duration(t1, t2) << "ms; " << "Write time: " << duration(t2, end_time) << "ms\n";
         }
+
+
 
     private:
         int     image_height;           // Rendered image height
@@ -48,6 +78,9 @@ class camera {
         vec3    pixel_delta_u;          // Offset to pixel to the right
         vec3    pixel_delta_v;          // Offset to pixel to the left
         vec3    u, v, w;                // Camera frame basis vectors
+        
+        // std::vector<color> image;
+        std::vector<std::string> thread_buffers;
 
         void initialize() {
             // Calculate image height; ensure it's at least 1
@@ -133,6 +166,35 @@ class camera {
         double degrees_to_radians(const double& deg) {
             return deg * (pi/180);
         }
+        
+        // Render row by row and store in the buffer
+        void render_rows(int thread_id, int start, int end, const hittable& world) {
+            auto startTime = std::chrono::high_resolution_clock::now();
+
+            for (int y = start; y < end; y++) {
+                for (int x = 0; x < image_width; x++) {
+                    color pixel_color(0,0,0);
+
+                    for (int sample = 0; sample < samples_per_pixel; sample++) {
+                        ray r = get_ray(x, y);
+                        pixel_color += ray_color(r, max_depth, world);
+                    }
+                    write_color_fast(thread_buffers[thread_id], pixel_samples_scale * pixel_color);
+                    // image[y*image_width + x] = pixel_samples_scale * pixel_color;
+                }
+            }
+            auto endTime = std::chrono::high_resolution_clock::now();
+            auto total = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+            std::clog << "Thread Finished Rows " << start << "-" << end <<
+                         "Finished at " << total << '\n';
+        } 
+        
+        long long duration(std::chrono::high_resolution_clock::time_point a, 
+                        std::chrono::high_resolution_clock::time_point b) {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count();
+}
+
 };
 
 #endif

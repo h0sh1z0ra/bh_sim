@@ -22,9 +22,12 @@ inline double deg_to_rad(double degrees) {
 
 inline double random_double() {
     // Returns a random real in [0,1)
-    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-    static std::mt19937 generator;
-    return distribution(generator);
+    // static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    // static std::mt19937 generator;
+    // return distribution(generator);
+    static thread_local std::mt19937 gen(std::random_device{}());
+    static thread_local std::uniform_real_distribution<double> dist(0.0, 1.0);
+    return dist(gen);
 }
 
 inline double random_double(double min, double max) {

@@ -37,4 +37,19 @@ void write_color(std::ostream& out, const color& pixel_color) {
     out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
 }
 
+void write_color_fast(std::string& out, const color& pixel_color) {
+    auto r = linear_to_gamma(pixel_color.x());
+    auto g = linear_to_gamma(pixel_color.y());
+    auto b = linear_to_gamma(pixel_color.z());
+
+    static const interval intensity(0.000, 0.999);
+    out.push_back(static_cast<char>(int(256 * intensity.clamp(r))));
+    out.push_back(static_cast<char>(int(256 * intensity.clamp(g))));
+    out.push_back(static_cast<char>(int(256 * intensity.clamp(b))));
+
+    // char buf[32];
+    // int len = snprintf(buf, sizeof(buf), "%d %d %d\n", rbyte, gbyte, bbyte);
+    // out.append(buf, len);
+}
+
 #endif
