@@ -3,6 +3,8 @@
 
 #include "hittable.h"
 #include "material.h"
+#include "geostate.h"
+#include "color.h"
 
 #include <thread>
 #include <chrono>
@@ -11,7 +13,6 @@
 class camera {
     public:
         // Image
-    
         double  aspect_ratio      = 1.0;
         int     image_width       = 100;
         int     samples_per_pixel = 10;
@@ -22,7 +23,11 @@ class camera {
         point3 lookat   = point3(0,0,-1);   // What we're looking at
         vec3   vup      = vec3(0,1,0);      // Altitude
 
-        void render(const hittable& world) {
+        double spin = 0.0;
+        double M = 1.0;
+
+        // void render(const hittable& world) {
+        void render() {
             auto start_time = std::chrono::high_resolution_clock::now();
 
             initialize();
@@ -45,7 +50,8 @@ class camera {
                 
                 // Create new thread, run camera.render_rows, on this camera, from start to end, on the scene "world"
                 threads.push_back(
-                    std::thread(&camera::render_rows, this, t, start, end, std::ref(world))
+                    // std::thread(&camera::render_rows, this, t, start, end, std::ref(world))
+                    std::thread(&camera::render_rows, this, t, start, end)
                 );
             }
             
@@ -162,13 +168,51 @@ class camera {
             // (1-a)*startValue + a*endValue
             // a scales with height, so the higher up the bluer
         }
+        
+        color trace(int px, int py) {
+            /* Pixel to cartesian */
+            auto pixel_sample = pixel00_loc + (px * pixel_delta_u) + (py * pixel_delta_v);
+            vec3 dir = unit_vector(pixel_sample - centre);
+
+            /* Cartesian cam position to BL coords */
+            double r_cam, th_cam, ph_cam;
+            cartToBL(centre, r_cam, th_cam, ph_cam);
+
+            /* Cartesian to spherical */
+            double n_r, n_th, n_ph;
+            cartToSph(dir, th_cam, ph_cam, n_r, n_th, n_ph);
+
+            // Add photon and walk
+            RayInit ray = init_ray(r_cam, th_cam, ph_cam, n_r, n_th, n_ph, spin, M);
+            return march(ray, spin, M);
+
+        }
+
+        // color trace_geodesic(const RayInit& ray, double a, double M) {
+        //     GeoState s = ray.state;
+        //     double E = ray.E, Lz = ray.Lz;
+
+        //     double r_horizon = M + std::sqrt(M*M - a*a);  // Outer horizon
+        //     double r_escape  = 1000.0;                    // "Far away"
+        //     double h = 0.01;
+        //     int max_steps = 100000;
+
+        //     for (int i = 0; i < max_steps; i++) {
+        //         s = rk4(s, h, E, Lz, a, M);
+                
+        //         // 1.01 avoids BL coordinates blowing up
+        //         if (s.r < r_horizon * 1.01) return color(0,0,0);    // Fell into BH
+        //         if (s.r > r_escape)         return color(1,1,1);   // Escaped
+        //     }
+        //     return color(0,0,0);
+        // }
 
         double degrees_to_radians(const double& deg) {
             return deg * (pi/180);
         }
         
         // Render row by row and store in the buffer
-        void render_rows(int thread_id, int start, int end, const hittable& world) {
+        void render_rows(int thread_id, int start, int end) {
             auto startTime = std::chrono::high_resolution_clock::now();
 
             for (int y = start; y < end; y++) {
@@ -176,8 +220,9 @@ class camera {
                     color pixel_color(0,0,0);
 
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
-                        ray r = get_ray(x, y);
-                        pixel_color += ray_color(r, max_depth, world);
+                        // ray r = get_ray(x, y);
+                        // pixel_color += ray_color(r, max_depth, world);
+                        pixel_color += trace(x, y);
                     }
                     write_color_fast(thread_buffers[thread_id], pixel_samples_scale * pixel_color);
                     // image[y*image_width + x] = pixel_samples_scale * pixel_color;
@@ -193,8 +238,9 @@ class camera {
         long long duration(std::chrono::high_resolution_clock::time_point a, 
                         std::chrono::high_resolution_clock::time_point b) {
             return std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count();
-}
+    }
 
 };
+
 
 #endif
