@@ -22,5 +22,9 @@ H = sp.Rational(1,2)*(g_tt*E**2 - 2*g_tphi*E*Lz + g_phph*Lz**2
 dH_dr  = sp.simplify(sp.diff(H, r))
 dH_dth = sp.simplify(sp.diff(H, th))
 
-# print(sp.cxxcode(dH_dr))
-print(sp.cxxcode(dH_dth))
+# using cse (c-style arithmetic); reduces Sigma and Delta calculations
+repl, reduced = sp.cse([-dH_dr, -dH_dth])   # note the minus signs, so you don't need them in C++
+for lhs, rhs in repl:
+    print(f"double {lhs} = {sp.cxxcode(rhs)};")
+print("dpr_dl =", sp.cxxcode(reduced[0]), ";")
+print("dpth_dl =", sp.cxxcode(reduced[1]), ";")

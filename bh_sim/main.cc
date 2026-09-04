@@ -77,7 +77,7 @@ int main() {
 
     camera cam;
 
-    cam.spin = 0;
+    cam.spin = 0.90;
     cam.M = 1.0;
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 400;
@@ -85,7 +85,7 @@ int main() {
     cam.max_depth         = 50;
 
     cam.vfov     = 45;
-    cam.lookfrom = point3(50,0,0);
+    cam.lookfrom = point3(-50,0,0);
     cam.lookat   = point3(0,0,0);
     cam.vup      = vec3(0,0,1);
 

@@ -27,46 +27,88 @@ struct GeoState {
     GeoState deriv(const GeoState& s, double E, double Lz, double a, double M) {
         // Convenience
         double r = s.r, theta = s.theta, p_r = s.pr, p_theta = s.ptheta, L_z = Lz;
+        
+        // // Efficiency
+        // double sth  = sin(theta), cth = cos(theta);
+        // double sth2 = sth*sth, cth2 = cth*cth;
+        // double r2   = r*r, a2 = a*a;
+        // double Lz2  = Lz*Lz, pr2 = p_r*p_r;
+        // double a2r2 = (a2+r2)*(a2+r2);
 
+        // Changed format to reduce computation times
+        double x0 = sin(theta);
+        double x1 = x0*x0;
+        double x2 = 2*r;
+        double x3 = -M*x2;
+        double x4 = a*a;
+        double x5 = r*r;
+        double x6 = x4 + x5;
+        double x7 = x3 + x6;
+        double x8 = x7*x7;
+        double x9 = cos(theta);
+        double x10 = x4*(x9*x9) + x5;
+        double x11 = 1.0/(x10*x10);
+        double x12 = M - r;
+        double x13 = L_z*L_z;
+        double x14 = x10*x13;
+        double x15 = x13*(-x10 - x3);
+        double x16 = r*x7;
+        double x17 = p_r*p_r;
+        double x18 = -x12;
+        double x19 = x1*x8;
+        double x20 = x10*x15;
+        double x21 = p_theta*p_theta;
+        double x22 = L_z*M*a;
+        double x23 = x1*x4;
+        double x24 = E*(E*(x23*x7 - x6*x6) + 4*r*x22);
+        double x25 = x1*x10;
+        double x26 = x1*x1*x4;
+        double x27 = x26*x7;
 
-        // Efficiency
-        double sth  = sin(theta), cth = cos(theta);
-        double sth2 = sth*sth, cth2 = cth*cth;
-        double r2   = r*r, a2 = a*a;
-        double Lz2  = Lz*Lz, pr2 = p_r*p_r;
-        double a2r2 = (a2+r2)*(a2+r2);
+        // // Big Greeks
+        // double Sigma = r2 + a2 *cth*cth;
+        // double Delta = r2 - 2*M*r + a2;
+        // double A     = (r2+a2)*(r2+a2) - a2*Delta*sth2;
+        // double Sigma2 = Sigma*Sigma;
+        // double Delta2 = Delta*Delta;
 
-        // Big Greeks
-        double Sigma = r2 + a2 *cth*cth;
-        double Delta = r2 - 2*M*r + a2;
-        double A     = (r2+a2)*(r2+a2) - a2*Delta*sth2;
-        double Sigma2 = Sigma*Sigma;
-        double Delta2 = Delta*Delta;
+        // // Inverse metrics
+        // double gtt     = -A/(Sigma*Delta);
+        // double gtphi   = -(2*M*a*r)/(Sigma*Delta);
+        // double gphiphi = (Delta - (a2)*(sth*sth))/(Sigma*Delta*sth*sth);
 
-        // Inverse metrics
+        // Big greeks and metrics
+        double Sigma = x10;               // cse already computed it!
+        double Delta = x7;                // and this
+        double A = (r*r + a*a)*(r*r + a*a) - a*a*Delta*x1;
         double gtt     = -A/(Sigma*Delta);
         double gtphi   = -(2*M*a*r)/(Sigma*Delta);
-        double gphiphi = (Delta - (a2)*(sth*sth))/(Sigma*Delta*sth*sth);
+        double gphiphi = (Delta - a*a*x1)/(Sigma*Delta*x1);
 
         double dr_dl      = (Delta/Sigma) * p_r;
         double dth_dl     = (1/Sigma) * p_theta;
 
-        double dpr_dl     = (-E*r*(E*(a2*(-2*M*r + a2 + r2)*sth2 - a2r2) + 4*L_z*M*a*r)*(-2*M*r + a2 + r2)*sth2 
-                          + E*(M - r)*(E*(a2*(-2*M*r + a2 + r2)*sth2 - a2r2) 
-                          + 4*L_z*M*a*r)*(a2*cth2 + r2)*sth2 + E*(E*(a2*(-M + r)*sth2 - 2*r*(a2 + r2)) 
-                          + 2*L_z*M*a)*(a2*cth2 + r2)*(-2*M*r + a2 + r2)*sth2 
-                          + Lz2*r*(-2*M*r + a2 + r2)*(2*M*r - a2*cth2 - r2) 
-                          - Lz2*(M - r)*(a2*cth2 + r2)*(-2*M*r + a2 + r2) 
-                          - Lz2*(M - r)*(a2*cth2 + r2)*(2*M*r - a2*cth2 - r2) 
-                          + pr2*(-M + r)*(a2*cth2 + r2)*Delta2*sth2 
-                          + r*(pr2*(-Delta) - p_theta*p_theta)*Delta2*sth2)/(Sigma2*Delta2*sth2);
+        // double dpr_dl     = (-E*r*(E*(a2*(-2*M*r + a2 + r2)*sth2 - a2r2) + 4*L_z*M*a*r)*(-2*M*r + a2 + r2)*sth2 
+        //                   + E*(M - r)*(E*(a2*(-2*M*r + a2 + r2)*sth2 - a2r2) 
+        //                   + 4*L_z*M*a*r)*(a2*cth2 + r2)*sth2 + E*(E*(a2*(-M + r)*sth2 - 2*r*(a2 + r2)) 
+        //                   + 2*L_z*M*a)*(a2*cth2 + r2)*(-2*M*r + a2 + r2)*sth2 
+        //                   + Lz2*r*(-2*M*r + a2 + r2)*(2*M*r - a2*cth2 - r2) 
+        //                   - Lz2*(M - r)*(a2*cth2 + r2)*(-2*M*r + a2 + r2) 
+        //                   - Lz2*(M - r)*(a2*cth2 + r2)*(2*M*r - a2*cth2 - r2) 
+        //                   + pr2*(-M + r)*(a2*cth2 + r2)*Delta2*sth2 
+        //                   + r*(pr2*(-Delta) - p_theta*p_theta)*Delta2*sth2)/(Sigma2*Delta2*sth2);
 
-        double dptheta_dl = (E*E*a2*(a2*cth2 + r2)*(-2*M*r + a2 + r2)*sth2*sth2 
-                          + E*a2*(E*(a2*(-2*M*r + a2 + r2)*sth2 - a2r2) 
-                          + 4*L_z*M*a*r)*sth2*sth2 - Lz2*a2*(a2*cth2 + r2)*sth2 - Lz2*a2*(2*M*r - a2*cth2 - r2)*sth2 
-                          + Lz2*(a2*cth2 + r2)*(2*M*r - a2*cth2 - r2) 
-                          + a2*(pr2*(-2*M*r + a2 + r2) + p_theta*p_theta)*(-2*M*r + a2 
-                          + r2)*sth2*sth2)*cth/(Sigma2*(-2*M*r + a2 + r2)*sth2*sth);
+        // double dptheta_dl = (E*E*a2*(a2*cth2 + r2)*(-2*M*r + a2 + r2)*sth2*sth2 
+        //                   + E*a2*(E*(a2*(-2*M*r + a2 + r2)*sth2 - a2r2) 
+        //                   + 4*L_z*M*a*r)*sth2*sth2 - Lz2*a2*(a2*cth2 + r2)*sth2 - Lz2*a2*(2*M*r - a2*cth2 - r2)*sth2 
+        //                   + Lz2*(a2*cth2 + r2)*(2*M*r - a2*cth2 - r2) 
+        //                   + a2*(pr2*(-2*M*r + a2 + r2) + p_theta*p_theta)*(-2*M*r + a2 
+        //                   + r2)*sth2*sth2)*cth/(Sigma2*(-2*M*r + a2 + r2)*sth2*sth);
+
+        double dpr_dl = -x11*(E*x25*x7*(E*(x18*x23 - x2*x6) + 2*x22) + r*x19*(-x17*x7 - x21) 
+                      - x1*x16*x24 + x10*x17*x18*x19 - x12*x14*x7 - x12*x20 + x12*x24*x25 + x15*x16)/(x1*x8);
+
+        double dptheta_dl = -x11*x9*(E*E*x10*x27 - x14*x23 - x15*x23 + x20 + x24*x26 + x27*(x17*x7 + x21))/(x0*x0*x0*x7);  
 
         double dt_dl      = -gtt*E + gtphi*Lz;
         double dphi_dl    = -gtphi*E + gphiphi*Lz;
@@ -76,8 +118,8 @@ struct GeoState {
         d.theta  = dth_dl;
         d.phi    = dphi_dl;
         d.t      = dt_dl;       
-        d.pr     = -dpr_dl;     // Flip signs since they're flipped for some reason idk
-        d.ptheta = -dptheta_dl;
+        d.pr     = dpr_dl;     // Signs are flipped in the sympy solver
+        d.ptheta = dptheta_dl;
 
         return d;
     }
@@ -218,22 +260,30 @@ color march(const RayInit& ray, double spin, double M) {
 
     for (int i = 0; i < max_steps; i++) {
         // Shrink step size near horizon and increase further out
-        double dh = h * std::max(0.05, (s.r - r_horizon) / (2.0 * M)); // 0.05 is the step floor; xM is how aggressively the step grows with dist
+        GeoState d = deriv(s, ray.E, ray.Lz, spin, M);
+        
+        // Dynamic step size for polar axis too
+        double dh_r  = std::abs(d.r) > 1e-12 ? 0.05 * s.r / std::abs(d.r) : 1e9;
+        double dh_th = std::abs(d.theta) > 1e-12 ? 0.05 / std::abs(d.theta) : 1e9;
+
+        double dh    = std::min({dh_r, dh_th, h * std::max(0.05, (s.r - r_horizon) / (2.0 * M))}); // 0.05 is the step floor; xM is how aggressively the step grows with dist
 
         // Step and increment counters
         s = rk4(s, dh, ray.E, ray.Lz, spin, M);
         total_steps++;
-        if (i % 200 == 0) {
-              std::cout << i << ": r=" << s.r 
-                  << " H=" << abs(hamiltonian(s, ray.E, ray.Lz, spin, M)) << "\n";
-        }
+        // if (i % 200 == 0) {
+        //       std::cout << i << ": r=" << s.r 
+        //           << " H=" << abs(hamiltonian(s, ray.E, ray.Lz, spin, M)) << "\n";
+        // }
         
         // 1.01 avoids BL coordinates blowing up
-        if (s.r < r_horizon * 1.01 || s.r < 0 || std::isnan(s.r)) {
+        if (std::isnan(s.theta) || std::isnan(s.r)) return color(1,0,0);
+        if (s.r < r_horizon * 1.01 || s.r < 0) {
             return color(0,0,0); // Fell into BH
         }
         if (s.r > 100.0) { // escpae radius
-            return sky_color(s.theta, s.phi);
+            // return sky_color(s.theta, s.phi);
+            return color(0,1,1);
         }
     }   
     maxxed_rays++;
