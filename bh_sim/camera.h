@@ -60,11 +60,19 @@ class camera {
             for (auto& th : threads) {
                 th.join();
             }
+
+            // Write the steps taken
+            std::clog << "total steps: " << total_steps
+                      << " per ray: " << total_steps / (long long)(image_width*image_height*samples_per_pixel)
+                      << "\n" << " rays that hit step limit: " << maxxed_rays << "\n";
             
             // Write in P6 binary format (way faster than P3)
             auto t2 = std::chrono::high_resolution_clock::now();
+
             std::ofstream out("image.ppm", std::ios::binary);   // write out in binary format
             out << "P6\n" << image_width << ' ' << image_height << "\n255\n";
+
+            // Write
             for (const auto& buf : thread_buffers)
                 out.write(buf.data(), buf.size());  
 

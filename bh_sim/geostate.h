@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <atomic>
 
 #include "rtweekend.h"
 #include "sky.h"
@@ -17,7 +18,11 @@ struct GeoState {
 
     GeoState(double r_, double th_, double ph_, double t_, double pr_, double pth_)
         : r(r_), theta(th_), phi(ph_), t(t_), pr(pr_), ptheta(pth_) {}
-};
+};  
+    // Step counter
+    std::atomic<long long> total_steps{0};
+    std::atomic<long long> maxxed_rays{0};
+    std::atomic<double > max_H{0.0};
 
     GeoState deriv(const GeoState& s, double E, double Lz, double a, double M) {
         // Convenience
@@ -212,21 +217,28 @@ color march(const RayInit& ray, double spin, double M) {
     int max_steps = 100000;
 
     for (int i = 0; i < max_steps; i++) {
-        // Shrink step size near horizon
-        double dh = h * std::min(1.0, (s.r - r_horizon) / (10.0 * M));
-        dh = std::max(dh, 1e-5);          // floor so it doesn't stall
+        // Shrink step size near horizon and increase further out
+        double dh = h * std::max(0.05, (s.r - r_horizon) / (2.0 * M)); // 0.05 is the step floor; xM is how aggressively the step grows with dist
 
-        // Step
+        // Step and increment counters
         s = rk4(s, dh, ray.E, ray.Lz, spin, M);
+        total_steps++;
+        if (i % 200 == 0) {
+              std::cout << i << ": r=" << s.r 
+                  << " H=" << abs(hamiltonian(s, ray.E, ray.Lz, spin, M)) << "\n";
+        }
         
         // 1.01 avoids BL coordinates blowing up
-        if (s.r < r_horizon * 1.01 || s.r < 0 || std::isnan(s.r)) 
+        if (s.r < r_horizon * 1.01 || s.r < 0 || std::isnan(s.r)) {
             return color(0,0,0); // Fell into BH
-        if (s.r > 200.0) {
+        }
+        if (s.r > 100.0) { // escpae radius
             return sky_color(s.theta, s.phi);
         }
-    }
+    }   
+    maxxed_rays++;
     return color(1,0,0);  // red if it runs out of steps
+    
 }
 
 #endif
