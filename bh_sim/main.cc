@@ -80,7 +80,7 @@ int main() {
     cam.spin = 0.90;
     cam.M = 1.0;
     cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 400;
+    cam.image_width       = 600;
     cam.samples_per_pixel = 1;
     cam.max_depth         = 50;
 
@@ -93,6 +93,7 @@ int main() {
     // world = hittable_list(make_shared<bvh_node>(world));
 
     load_sky("milkyway.jpg");
+    
 
     cam.render();
 }

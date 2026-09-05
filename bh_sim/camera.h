@@ -83,7 +83,6 @@ class camera {
         }
 
 
-
     private:
         int     image_height;           // Rendered image height
         double  pixel_samples_scale;    // Color scale factor for a sum of pixel samples
@@ -96,40 +95,7 @@ class camera {
         // std::vector<color> image;
         std::vector<std::string> thread_buffers;
 
-        void initialize() {
-            // Calculate image height; ensure it's at least 1
-            image_height = int(image_width / aspect_ratio);
-            image_height = (image_height < 1) ? 1 : image_height;
-
-            pixel_samples_scale = 1.0 / samples_per_pixel;
-
-            // Camera; viewport dimensions
-            centre = lookfrom;
-
-            auto focal_length = (lookfrom - lookat).length();
-            auto theta = degrees_to_radians(vfov);
-            auto h = std::tan(theta/2);
-            auto viewport_height = 2 * h * focal_length;
-            auto viewport_width = viewport_height * (double(image_width)/image_height); // actual ratio
-
-            // Calculate u,v,w unit basis vectors for the camera coordinate frame
-            w = unit_vector(lookfrom - lookat);
-            u = unit_vector(cross(vup, w));
-            v = cross(w, u);
-
-            // Calculate the vectors across horizontal and down the vertical viewport edges
-            vec3 viewport_u = viewport_width * u;
-            vec3 viewport_v = viewport_height * -v;
-
-            // Calculate horizontal and vertical delta vectors from pixel to pixel
-            // I think delta vectors are just the distance between pixels
-            pixel_delta_u = viewport_u / image_width;    // length across / width
-            pixel_delta_v = viewport_v / image_height;   // length upwawrds / height
-
-            // Calculate location of upper left pixel (since we want to start from top to bottom)
-            auto viewport_upper_left = centre - (focal_length *w) - viewport_u/2 - viewport_v/2;
-            pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-        }
+        
 
         ray get_ray(int i, int j) const{
             // Construct a camera ray originating from the origin and directed at a randomly
@@ -177,24 +143,7 @@ class camera {
             // a scales with height, so the higher up the bluer
         }
         
-        color trace(int px, int py) {
-            /* Pixel to cartesian */
-            auto pixel_sample = pixel00_loc + (px * pixel_delta_u) + (py * pixel_delta_v);
-            vec3 dir = unit_vector(pixel_sample - centre);
-
-            /* Cartesian cam position to BL coords */
-            double r_cam, th_cam, ph_cam;
-            cartToBL(centre, r_cam, th_cam, ph_cam);
-
-            /* Cartesian to spherical */
-            double n_r, n_th, n_ph;
-            cartToSph(dir, th_cam, ph_cam, n_r, n_th, n_ph);
-
-            // Add photon and walk
-            RayInit ray = init_ray(r_cam, th_cam, ph_cam, n_r, n_th, n_ph, spin, M);
-            return march(ray, spin, M);
-
-        }
+        
 
         // color trace_geodesic(const RayInit& ray, double a, double M) {
         //     GeoState s = ray.state;
@@ -242,6 +191,63 @@ class camera {
             std::clog << "Thread Finished Rows " << start << " - " << end <<
                          "; finished at " << total << "ms\n";
         } 
+
+                color trace(int px, int py) {
+            /* Pixel to cartesian */
+            auto offset = sample_square();
+            auto pixel_sample = pixel00_loc 
+                              + ((px + offset.x()) * pixel_delta_u) 
+                              + ((py + offset.y()) * pixel_delta_v);
+            vec3 dir = unit_vector(pixel_sample - centre);
+
+            /* Cartesian cam position to BL coords */
+            double r_cam, th_cam, ph_cam;
+            cartToBL(centre, r_cam, th_cam, ph_cam);
+
+            /* Cartesian to spherical */
+            double n_r, n_th, n_ph;
+            cartToSph(dir, th_cam, ph_cam, n_r, n_th, n_ph);
+
+            // Add photon and walk
+            RayInit ray = init_ray(r_cam, th_cam, ph_cam, n_r, n_th, n_ph, spin, M);
+            return march(ray, spin, M);
+
+        }
+
+        void initialize() {
+            // Calculate image height; ensure it's at least 1
+            image_height = int(image_width / aspect_ratio);
+            image_height = (image_height < 1) ? 1 : image_height;
+
+            pixel_samples_scale = 1.0 / samples_per_pixel;
+
+            // Camera; viewport dimensions
+            centre = lookfrom;
+
+            auto focal_length = (lookfrom - lookat).length();
+            auto theta = degrees_to_radians(vfov);
+            auto h = std::tan(theta/2);
+            auto viewport_height = 2 * h * focal_length;
+            auto viewport_width = viewport_height * (double(image_width)/image_height); // actual ratio
+
+            // Calculate u,v,w unit basis vectors for the camera coordinate frame
+            w = unit_vector(lookfrom - lookat);
+            u = unit_vector(cross(vup, w));
+            v = cross(w, u);
+
+            // Calculate the vectors across horizontal and down the vertical viewport edges
+            vec3 viewport_u = viewport_width * u;
+            vec3 viewport_v = viewport_height * -v;
+
+            // Calculate horizontal and vertical delta vectors from pixel to pixel
+            // I think delta vectors are just the distance between pixels
+            pixel_delta_u = viewport_u / image_width;    // length across / width
+            pixel_delta_v = viewport_v / image_height;   // length upwawrds / height
+
+            // Calculate location of upper left pixel (since we want to start from top to bottom)
+            auto viewport_upper_left = centre - (focal_length *w) - viewport_u/2 - viewport_v/2;
+            pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        }
         
         long long duration(std::chrono::high_resolution_clock::time_point a, 
                         std::chrono::high_resolution_clock::time_point b) {

@@ -265,10 +265,17 @@ color march(const RayInit& ray, double spin, double M) {
         // Dynamic step size for polar axis too
         double dh_r  = std::abs(d.r) > 1e-12 ? 0.05 * s.r / std::abs(d.r) : 1e9;
         double dh_th = std::abs(d.theta) > 1e-12 ? 0.05 / std::abs(d.theta) : 1e9;
+        double dist_to_pole = std::min(s.theta, pi - s.theta);
+        double dh_pole = std::abs(d.theta) > 1e-12 ? 0.1 * dist_to_pole / std::abs(d.theta) : 1e9;  
 
-        double dh    = std::min({dh_r, dh_th, h * std::max(0.05, (s.r - r_horizon) / (2.0 * M))}); // 0.05 is the step floor; xM is how aggressively the step grows with dist
+        double dh    = std::min({dh_r, dh_th, dh_pole, h * std::max(0.05, (s.r - r_horizon) / (2.0 * M))}); // 0.05 is the step floor; xM is how aggressively the step grows with dist
 
-        // Step and increment counters
+        // Step and increment counter
+        double theta_prev = s.theta;
+        double r_prev     = s.r;
+        
+        bool crossed = false;
+
         s = rk4(s, dh, ray.E, ray.Lz, spin, M);
         total_steps++;
         // if (i % 200 == 0) {
@@ -276,14 +283,32 @@ color march(const RayInit& ray, double spin, double M) {
         //           << " H=" << abs(hamiltonian(s, ray.E, ray.Lz, spin, M)) << "\n";
         // }
         
+        // Prevents seam if the ray reaches negative values
+        double th_next_est = s.theta + d.theta * dh;
+        if (th_next_est < 0 || th_next_est > pi) {
+            // reflect the current state onto the other side, then step normally
+            s.theta = (th_next_est < 0) ? -s.theta : 2*pi - s.theta;
+            s.phi += pi;
+            s.ptheta = -s.ptheta;
+        }
+        
+        // Detect equatorial crossing by sign change
+        if ((theta_prev - pi/2) * (s.theta - pi/2) < 0) crossed = true;
+
+        if (crossed) {
+            double frac = (pi/2 - theta_prev) / (s.theta - theta_prev);
+            double r_cross = r_prev + frac * (s.r - r_prev);
+            if (r_cross > disk_r_inner && r_cross < disk_r_outer)
+                return disk_color(r_cross);
+        }
+        
         // 1.01 avoids BL coordinates blowing up
-        if (std::isnan(s.theta) || std::isnan(s.r)) return color(1,0,0);
+        if (std::isnan(s.theta) || std::isnan(s.r)) return color(1,1,0);
         if (s.r < r_horizon * 1.01 || s.r < 0) {
             return color(0,0,0); // Fell into BH
         }
         if (s.r > 100.0) { // escpae radius
-            // return sky_color(s.theta, s.phi);
-            return color(0,1,1);
+            return sky_color(s.theta, s.phi);
         }
     }   
     maxxed_rays++;
