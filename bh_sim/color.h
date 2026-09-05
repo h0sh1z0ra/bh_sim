@@ -4,6 +4,8 @@
 #include "vec3.h"
 #include "interval.h"
 
+#include <algorithm>
+
 // #include <iostream>
 // Going to be using rtweekend.h common header, so this isn't needed anymore
 
@@ -50,6 +52,15 @@ void write_color_fast(std::string& out, const color& pixel_color) {
     // char buf[32];
     // int len = snprintf(buf, sizeof(buf), "%d %d %d\n", rbyte, gbyte, bbyte);
     // out.append(buf, len);
+}
+
+// ACES filmic colour normalisation
+inline double aces(double x) {
+    return std::clamp((x*(2.51*x + 0.03)) / (x*(2.43*x + 0.59) + 0.14), 0.0, 1.0);
+}
+
+inline color tone_map(const color& c) {
+    return color(aces(c.x()), aces(c.y()), aces(c.z()));
 }
 
 #endif

@@ -80,6 +80,8 @@ class camera {
 
             std::clog << "\nRender Time: " << duration(start_time, end_time) << "ms; " << "Join time: " << 
                                               duration(t1, t2) << "ms; " << "Write time: " << duration(t2, end_time) << "ms\n";
+                                              
+            std::cout << "min, max = " << gmin << ", " << gmax << "\n" << std::flush;
         }
 
 
@@ -188,11 +190,11 @@ class camera {
             auto endTime = std::chrono::high_resolution_clock::now();
             auto total = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 
-            std::clog << "Thread Finished Rows " << start << " - " << end <<
-                         "; finished at " << total << "ms\n";
+            // std::clog << "Thread Finished Rows " << start << " - " << end <<
+            //              "; finished at " << total << "ms\n";
         } 
 
-                color trace(int px, int py) {
+        color trace(int px, int py) {
             /* Pixel to cartesian */
             auto offset = sample_square();
             auto pixel_sample = pixel00_loc 

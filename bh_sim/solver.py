@@ -1,3 +1,6 @@
+############################################################################################
+# Solver which prints Hamiltonian equations in Boyer-Lindquist coordinates in C++ style code
+############################################################################################
 import sympy as sp
 
 # variables

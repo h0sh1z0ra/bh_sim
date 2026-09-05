@@ -7,6 +7,7 @@
 
 #include "rtweekend.h"
 #include "sky.h"
+#include "disk.h"
 
 using namespace std;
 
@@ -23,6 +24,7 @@ struct GeoState {
     std::atomic<long long> total_steps{0};
     std::atomic<long long> maxxed_rays{0};
     std::atomic<double > max_H{0.0};
+    double gmin = 1e9, gmax = 0.0;
 
     GeoState deriv(const GeoState& s, double E, double Lz, double a, double M) {
         // Convenience
@@ -252,6 +254,9 @@ void cartToSph(const point3& dir, double& th, double& ph, double& n_r, double& n
     assert(abs(mag2 - 1.0) < 1e-9);
 }
 
+
+
+// RK4
 color march(const RayInit& ray, double spin, double M) {
     GeoState s = ray.state;
     double r_horizon = M + std::sqrt(M*M - spin*spin);  // Outer horizon
@@ -298,12 +303,52 @@ color march(const RayInit& ray, double spin, double M) {
         if (crossed) {
             double frac = (pi/2 - theta_prev) / (s.theta - theta_prev);
             double r_cross = r_prev + frac * (s.r - r_prev);
-            if (r_cross > disk_r_inner && r_cross < disk_r_outer)
-                return disk_color(r_cross);
+
+            // return disk_color(r_cross) * std::pow(gfac, 4);
+            // return color(0,1,0);
+
+            // Disk debug check
+            if (r_cross > disk_r_inner && r_cross < disk_r_outer) {
+                
+
+                // Doppler beaming and gravitational redshift
+                double Omega     = 1 / (std::pow(r_cross, 1.5) + spin);
+                double gtt_c     = -(1 - 2*M/r_cross);
+                double gtphi_c   = -2*M*spin/r_cross;
+                double gphiphi_c = r_cross*r_cross + spin*spin + 2*M*spin*spin/r_cross;
+
+                double ut   = 1.0/std::sqrt(-(gtt_c + 2*Omega*gtphi_c + Omega*Omega*gphiphi_c));
+                double gfac = ray.E / (ut * (ray.E - ray.Lz*Omega));
+
+                if (gfac < gmin) gmin = gfac;
+                if (gfac > gmax) gmax = gfac;
+                // if (gfac > 1.4 || gfac < 0.25) 
+                //     std::cout << "extreme g=" << gfac << " at r=" << r_cross << "\n";
+                // if (n++ < 20) std::cout << "min, max = " << gmin << ", " << gmax << "\n" << std::flush;
+
+                double exposure = 2.0;
+                static int n = 0;
+                if (n++ < 5) std::cout << "EXPOSURE=" << exposure << " g=" << gfac 
+                                    << " pre=" << (std::pow(gfac,4)*exposure) 
+                                    << " post=" << aces(std::pow(gfac,4)*exposure) << "\n";
+                double t = std::clamp((gfac - 0.5) / 0.9, 0.0, 1.0);
+
+                color cool = color(1.0, 0.1, 0.0);     // saturated red, full intensity
+                color mid  = color(1.0, 0.45, 0.05);   // orange
+                color hot  = color(1.0, 0.95, 0.85);   // near-white
+
+                color base;
+                if (t < 0.5) base = (1-2*t)*cool + (2*t)*mid;
+                else         base = (2-2*t)*mid + (2*t-1)*hot;
+                
+                color c = base * std::pow(gfac, 4) * exposure;
+                return tone_map(c);
+            }
         }
+
         
         // 1.01 avoids BL coordinates blowing up
-        if (std::isnan(s.theta) || std::isnan(s.r)) return color(1,1,0);
+        if (std::isnan(s.theta) || std::isnan(s.r)) return color(0,1,0);
         if (s.r < r_horizon * 1.01 || s.r < 0) {
             return color(0,0,0); // Fell into BH
         }

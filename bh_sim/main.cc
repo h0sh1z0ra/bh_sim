@@ -77,15 +77,20 @@ int main() {
 
     camera cam;
 
-    cam.spin = 0.90;
+    cam.spin = 0.9;
     cam.M = 1.0;
     cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 600;
-    cam.samples_per_pixel = 1;
+    cam.image_width       = 1920;
+    cam.samples_per_pixel = 16;
     cam.max_depth         = 50;
 
+    // Set inner radius of accretion disk
+    disk_r_inner = isco_radius(cam.spin, cam.M);
+    disk_r_outer = 20.0;
+
+    // Camera view
     cam.vfov     = 45;
-    cam.lookfrom = point3(-50,0,0);
+    cam.lookfrom = point3(-50,0,3);
     cam.lookat   = point3(0,0,0);
     cam.vup      = vec3(0,0,1);
 
