@@ -20,9 +20,7 @@ The ray-tracing and camera model is based on [_Ray Tracing in One Weekend_](http
 
 The radius of the shadow (the actual black part) was verified against the analytic Schwarzschild shadow radius of $\sqrt{27} M$ (but M = 1, so $\sqrt{27} \approx 5.196$), agreeing to within 6%. Also, the Hamiltonian that defines the photon trajectories, given by
 
-<p align="center">
   $$ H = \frac{1}{2}g^{\mu\nu}p_\mu p_\nu = 0 $$
-</p>
 
 is always 0, since photons have no mass. The Hamiltonian was checked numerically and stays $\sim 10^{-16}$ for each ray.
 
