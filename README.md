@@ -18,7 +18,7 @@ The accretion disks appear different colours, due to doppler beaming and gravita
 ## Inner Workings, Briefly
 The ray-tracing and camera model is based on [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html). It uses an adaptive 4th-order Runge-Kutta method to numerically integrate each ray's path through curved spacetime, until it is absorbed by the black hole, hits the accretion disk or escapes. The equations that define the black hole were derived and translated into C++ code using SymPy.
 
-The radius of the shadow (the actual black part) was verified against the analytic Schwarschild shadow radius of $\sqrt{27} M$ (but M = 1, so $\sqrt{27} \approx 5.196$), agreeing to within 6%. Also, the Hamiltonian that define the photon trajectories, given by
+The radius of the shadow (the actual black part) was verified against the analytic Schwarzschild shadow radius of $\sqrt{27} M$ (but M = 1, so $\sqrt{27} \approx 5.196$), agreeing to within 6%. Also, the Hamiltonian that defines the photon trajectories, given by
 <p align="center">
   $$ H = \frac{1}{2}g^{\mu\nu}p_\mu p_\nu = 0 $$
 </p>
@@ -32,7 +32,7 @@ Before the black hole, since the ray-tracing model is based on _Ray Tracing in O
 Separately, images are written into binary format instead of ASCII PPM format, which significantly improves write time to the image file from 10 seconds to ~3 ms.
 
 ## Issues
-When generating a still image (and to some extent on the browser), a noticeable vertical seam can be seen. I suspect this is due to the Boyer-Linquist coordinate system I used, and it causes a singularity at the exact centre.
+When generating a still image (and to some extent on the browser), a noticeable vertical seam can be seen. I suspect this is due to the Boyer-Lindquist coordinate system I used, and it causes a singularity at the exact centre of the image, which is the polar axis ($\theta = 0$ and $\pi$), since BL coordinates divide by $\sin\theta$ which vanish at the poles.
 
 ## References
 **Ray-tracing**: [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html).  
@@ -40,6 +40,6 @@ Boyer, R. H. & Lindquist, R. W. (1967), Maximal analytic extension of the Kerr m
 Bardeen, Press & Teukolsky (1972) — ISCO and photon orbits in Kerr (calculating the inner radius of the accretion disk)  
 
 **Milky Way panorama**: ESO/S. Brunier, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)  
-**Image loading**: `stb_image.h` by [Sean Barrett](https://github.com/nothings/stb/blob/master/stb_image.h)
-**Fumino Nendroid**: on [meccha-japan.com](https://meccha-japan.com/en/chibi-style/14214-nendoroid-fumino-furuhashi-we-never-learn-bokuben.html)
-**Black Hole Pixel Art Icon**: by franky on [dinopixel.com](https://dinopixel.com/black-hole-pixel-art-58585)
+**Image loading**: `stb_image.h` by [Sean Barrett](https://github.com/nothings/stb/blob/master/stb_image.h)  
+**Fumino Nendroid**: on [meccha-japan.com](https://meccha-japan.com/en/chibi-style/14214-nendoroid-fumino-furuhashi-we-never-learn-bokuben.html)  
+**Black Hole Pixel Art Icon**: by franky on [dinopixel.com](https://dinopixel.com/black-hole-pixel-art-58585)  
