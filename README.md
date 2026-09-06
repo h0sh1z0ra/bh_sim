@@ -1,5 +1,5 @@
 # Black Hole Live(ish) Simulation
-Below is the physics and workings of the simulation if you're interested. Otherwise, play around with the simulation here: [super cool awesome simulation](https://h0sh1z0ra.github.io/bh_sim/). To move the camera, click anywhere in the frame and drag. You can also zoom; after every movement, just give it a sec to re-render.
+Below is the physics and workings of the simulation if you're interested. Otherwise, play around with the simulation here: [super cool awesome simulation](https://h0sh1z0ra.github.io/bh_sim/). To move the camera, click anywhere in the frame and drag. You can also zoom; after every movement, just give it a sec to re-render. If you change the spin, please be sure to click render to re-render.
 
 ## Background
 This project is inspired by kavan's [_Simulating Black Holes in C++_](https://www.youtube.com/watch?v=8-B6ryuBkCM), minus the OpenGL. In addition to generating still images, I also used Emscripten to compile my C++ code to WebAssembly, so it can be viewed in a browser tab instead. The only downside is, on every camera movement, the simulation has to re-render the black hole, so it doesn't look quite as smooth as kavan's rendition.
