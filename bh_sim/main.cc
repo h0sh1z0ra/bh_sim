@@ -85,7 +85,7 @@ int main() {
     cam.max_depth         = 50;
 
     // Set inner radius of accretion disk
-    disk_r_inner = isco_radius(cam.spin, cam.M);
+    disk_r_inner = isco_radius(cam.spin, cam.M)+2;
     disk_r_outer = 20.0;
 
     // Camera view
@@ -97,7 +97,7 @@ int main() {
     // Build BVH over all objects
     // world = hittable_list(make_shared<bvh_node>(world));
 
-    load_sky("milkyway.jpg");
+    load_sky("img/milkyway.jpg");
     
 
     cam.render();

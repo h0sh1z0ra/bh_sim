@@ -115,6 +115,41 @@ class camera {
             }
         }
 
+        void initialize() {
+            // Calculate image height; ensure it's at least 1
+            image_height = int(image_width / aspect_ratio);
+            image_height = (image_height < 1) ? 1 : image_height;
+
+            pixel_samples_scale = 1.0 / samples_per_pixel;
+
+            // Camera; viewport dimensions
+            centre = lookfrom;
+
+            auto focal_length = (lookfrom - lookat).length();
+            auto theta = degrees_to_radians(vfov);
+            auto h = std::tan(theta/2);
+            auto viewport_height = 2 * h * focal_length;
+            auto viewport_width = viewport_height * (double(image_width)/image_height); // actual ratio
+
+            // Calculate u,v,w unit basis vectors for the camera coordinate frame
+            w = unit_vector(lookfrom - lookat);
+            u = unit_vector(cross(vup, w));
+            v = cross(w, u);
+
+            // Calculate the vectors across horizontal and down the vertical viewport edges
+            vec3 viewport_u = viewport_width * u;
+            vec3 viewport_v = viewport_height * -v;
+
+            // Calculate horizontal and vertical delta vectors from pixel to pixel
+            // I think delta vectors are just the distance between pixels
+            pixel_delta_u = viewport_u / image_width;    // length across / width
+            pixel_delta_v = viewport_v / image_height;   // length upwawrds / height
+
+            // Calculate location of upper left pixel (since we want to start from top to bottom)
+            auto viewport_upper_left = centre - (focal_length *w) - viewport_u/2 - viewport_v/2;
+            pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        }
+
 
     private:
         int     image_height;           // Rendered image height
@@ -245,41 +280,6 @@ class camera {
             RayInit ray = init_ray(r_cam, th_cam, ph_cam, n_r, n_th, n_ph, spin, M);
             return march(ray, spin, M);
 
-        }
-
-        void initialize() {
-            // Calculate image height; ensure it's at least 1
-            image_height = int(image_width / aspect_ratio);
-            image_height = (image_height < 1) ? 1 : image_height;
-
-            pixel_samples_scale = 1.0 / samples_per_pixel;
-
-            // Camera; viewport dimensions
-            centre = lookfrom;
-
-            auto focal_length = (lookfrom - lookat).length();
-            auto theta = degrees_to_radians(vfov);
-            auto h = std::tan(theta/2);
-            auto viewport_height = 2 * h * focal_length;
-            auto viewport_width = viewport_height * (double(image_width)/image_height); // actual ratio
-
-            // Calculate u,v,w unit basis vectors for the camera coordinate frame
-            w = unit_vector(lookfrom - lookat);
-            u = unit_vector(cross(vup, w));
-            v = cross(w, u);
-
-            // Calculate the vectors across horizontal and down the vertical viewport edges
-            vec3 viewport_u = viewport_width * u;
-            vec3 viewport_v = viewport_height * -v;
-
-            // Calculate horizontal and vertical delta vectors from pixel to pixel
-            // I think delta vectors are just the distance between pixels
-            pixel_delta_u = viewport_u / image_width;    // length across / width
-            pixel_delta_v = viewport_v / image_height;   // length upwawrds / height
-
-            // Calculate location of upper left pixel (since we want to start from top to bottom)
-            auto viewport_upper_left = centre - (focal_length *w) - viewport_u/2 - viewport_v/2;
-            pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
         }
         
         long long duration(std::chrono::high_resolution_clock::time_point a, 

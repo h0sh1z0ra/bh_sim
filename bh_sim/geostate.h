@@ -273,7 +273,7 @@ color march(const RayInit& ray, double spin, double M) {
         double dist_to_pole = std::min(s.theta, pi - s.theta);
         double dh_pole = std::abs(d.theta) > 1e-12 ? 0.1 * dist_to_pole / std::abs(d.theta) : 1e9;  
 
-        double dh    = std::min({dh_r, dh_th, dh_pole, h * std::max(0.05, (s.r - r_horizon) / (1.0 * M))}); // 0.05 is the step floor; xM is how aggressively the step grows with dist
+        double dh    = std::min({dh_r, dh_th, dh_pole, h * std::max(0.05, (s.r - r_horizon) / (0.75 * M))}); // 0.05 is the step floor; xM is how aggressively the step grows with dist
 
         // Step and increment counter
         double theta_prev = s.theta;
@@ -352,7 +352,7 @@ color march(const RayInit& ray, double spin, double M) {
         if (s.r < r_horizon * 1.01 || s.r < 0) {
             return color(0,0,0); // Fell into BH
         }
-        if (s.r > 80.0) { // escpae radius
+        if (s.r > 75.0) { // escpae radius
             return sky_color(s.theta, s.phi);
         }
     }   
