@@ -9,6 +9,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <vector>
 
 class camera {
     public:
@@ -82,6 +83,36 @@ class camera {
                                               duration(t1, t2) << "ms; " << "Write time: " << duration(t2, end_time) << "ms\n";
                                               
             std::cout << "min, max = " << gmin << ", " << gmax << "\n" << std::flush;
+        }
+
+                // for emscripten
+        void render_to(std::vector<unsigned char>& out) {
+            initialize();
+
+            const int num_threads = 1;
+            int rows_per_thread = image_height/num_threads;
+            
+            // Render rows
+            for (int y = 0; y < image_height; y++) {
+                for (int x = 0; x < image_width; x++) {
+                    color pixel_color(0,0,0);
+                    for (int s = 0; s < samples_per_pixel; s++)
+                        pixel_color += trace(x, y);
+                    pixel_color = pixel_color * pixel_samples_scale;
+
+                    // gamma + clamp (same as write_color)
+                    double r = linear_to_gamma(pixel_color.x());
+                    double g = linear_to_gamma(pixel_color.y());
+                    double b = linear_to_gamma(pixel_color.z());
+                    static const interval intensity(0.000, 0.999);
+
+                    int idx = (y * image_width + x) * 4;
+                    out[idx+0] = (unsigned char)(256 * intensity.clamp(r));
+                    out[idx+1] = (unsigned char)(256 * intensity.clamp(g));
+                    out[idx+2] = (unsigned char)(256 * intensity.clamp(b));
+                    out[idx+3] = 255;  // alpha
+                }
+            }
         }
 
 
@@ -255,6 +286,7 @@ class camera {
                         std::chrono::high_resolution_clock::time_point b) {
             return std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count();
     }
+
 
 };
 

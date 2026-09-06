@@ -40,6 +40,7 @@ color sky_color(double th, double ph) {
     int py = std::min(int(v * sky_h), sky_h - 1);
 
     int idx = (py * sky_w + px) * 3;
+    if (!sky_data) return color(0.02, 0.02, 0.05);   // flat dark sky
     return color(sky_data[idx]/255.0, sky_data[idx+1]/255.0, sky_data[idx+2]/255.0);
 };
 

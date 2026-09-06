@@ -89,7 +89,7 @@ int main() {
     disk_r_outer = 20.0;
 
     // Camera view
-    cam.vfov     = 45;
+    cam.vfov     = 90;
     cam.lookfrom = point3(-50,0,3);
     cam.lookat   = point3(0,0,0);
     cam.vup      = vec3(0,0,1);
