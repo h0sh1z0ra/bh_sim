@@ -35,11 +35,11 @@ Separately, images are written into binary format instead of ASCII PPM format, w
 When generating a still image (and to some extent on the browser), a noticeable vertical seam can be seen. I suspect this is due to the Boyer-Linquist coordinate system I used, and it causes a singularity at the exact centre.
 
 ## References
-Ray-tracing: [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html).  
+**Ray-tracing**: [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html).  
 Boyer, R. H. & Lindquist, R. W. (1967), Maximal analytic extension of the Kerr metric (for coordinate system)  
 Bardeen, Press & Teukolsky (1972) — ISCO and photon orbits in Kerr (calculating the inner radius of the accretion disk)  
 
-Milky Way panorama: ESO/S. Brunier, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)  
-Image loading: `stb_image.h` by [Sean Barrett](https://github.com/nothings/stb/blob/master/stb_image.h)
-Fumino Nendroid: on [meccha-japan.com](https://meccha-japan.com/en/chibi-style/14214-nendoroid-fumino-furuhashi-we-never-learn-bokuben.html)
-Black Hole Pixel Art Icon: by franky on [dinopixel.com](https://dinopixel.com/black-hole-pixel-art-58585)
+**Milky Way panorama**: ESO/S. Brunier, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)  
+**Image loading**: `stb_image.h` by [Sean Barrett](https://github.com/nothings/stb/blob/master/stb_image.h)
+**Fumino Nendroid**: on [meccha-japan.com](https://meccha-japan.com/en/chibi-style/14214-nendoroid-fumino-furuhashi-we-never-learn-bokuben.html)
+**Black Hole Pixel Art Icon**: by franky on [dinopixel.com](https://dinopixel.com/black-hole-pixel-art-58585)
