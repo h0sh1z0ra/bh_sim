@@ -19,10 +19,12 @@ The accretion disks appear different colours, due to doppler beaming and gravita
 The ray-tracing and camera model is based on [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html). It uses an adaptive 4th-order Runge-Kutta method to numerically integrate each ray's path through curved spacetime, until it is absorbed by the black hole, hits the accretion disk or escapes. The equations that define the black hole were derived and translated into C++ code using SymPy.
 
 The radius of the shadow (the actual black part) was verified against the analytic Schwarzschild shadow radius of $\sqrt{27} M$ (but M = 1, so $\sqrt{27} \approx 5.196$), agreeing to within 6%. Also, the Hamiltonian that defines the photon trajectories, given by
+
 <p align="center">
   $$ H = \frac{1}{2}g^{\mu\nu}p_\mu p_\nu = 0 $$
 </p>
-is always 0, since photons have no mass. The Hamiltonian was checked numerically and stays $~10^{-16}$ for each ray.
+
+is always 0, since photons have no mass. The Hamiltonian was checked numerically and stays $\sim 10^{-16}$ for each ray.
 
 ## Performance
 The numerical integration by far dominates rendering time. By just including a fixed-step size implementation of RK4, each ray would take 5000+ steps. By making the rays take larger steps when they're further from the black hole, step count was eventually reduced to around 190 per ray, drastically improving render time.
